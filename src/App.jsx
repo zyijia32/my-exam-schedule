@@ -3,8 +3,28 @@ import { CalendarDays, Clock3, TriangleAlert } from 'lucide-react'
 import StudyConfigPanel from './components/StudyConfigPanel'
 import ScheduleTable from './components/ScheduleTable'
 import { buildWeeklySchedule } from './lib/scheduler'
+import { readConfigFromUrl, writeConfigToUrl } from './lib/configSync'
 
 const STORAGE_KEY = 'exam-schedule-config-v1'
+
+function loadSavedConfig() {
+  const fromUrl = readConfigFromUrl()
+  if (fromUrl) {
+    return fromUrl
+  }
+  if (typeof window === 'undefined') {
+    return null
+  }
+  const saved = window.localStorage.getItem(STORAGE_KEY)
+  if (!saved) {
+    return null
+  }
+  try {
+    return JSON.parse(saved)
+  } catch {
+    return null
+  }
+}
 
 function formatDateInput(date) {
   const year = date.getFullYear()
@@ -60,57 +80,25 @@ function getExamCountdown() {
 
 function App() {
   const [totalHours, setTotalHours] = useState(() => {
-    if (typeof window === 'undefined') {
-      return { calculus: '8', cs: '6', english: '5' }
-    }
-    const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (!saved) {
-      return { calculus: '8', cs: '6', english: '5' }
-    }
-    try {
-      const parsed = JSON.parse(saved)
-      return {
-        calculus: parsed.totalHours?.calculus ?? '8',
-        cs: parsed.totalHours?.cs ?? '6',
-        english: parsed.totalHours?.english ?? '5',
-      }
-    } catch {
-      return { calculus: '8', cs: '6', english: '5' }
+    const saved = loadSavedConfig()
+    return {
+      calculus: saved?.totalHours?.calculus ?? '8',
+      cs: saved?.totalHours?.cs ?? '6',
+      english: saved?.totalHours?.english ?? '5',
     }
   })
   const [targetDate, setTargetDate] = useState(() => {
-    if (typeof window === 'undefined') {
-      return getDefaultTargetDate()
-    }
-    const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (!saved) {
-      return getDefaultTargetDate()
-    }
-    try {
-      const parsed = JSON.parse(saved)
-      return parsed.targetDate ?? getDefaultTargetDate()
-    } catch {
-      return getDefaultTargetDate()
-    }
+    const saved = loadSavedConfig()
+    return saved?.targetDate ?? getDefaultTargetDate()
   })
   const [leaveDays, setLeaveDays] = useState(() => {
-    if (typeof window === 'undefined') {
-      return { fri: false, sun: false }
-    }
-    const saved = window.localStorage.getItem(STORAGE_KEY)
-    if (!saved) {
-      return { fri: false, sun: false }
-    }
-    try {
-      const parsed = JSON.parse(saved)
-      return {
-        fri: parsed.leaveDays?.fri ?? false,
-        sun: parsed.leaveDays?.sun ?? false,
-      }
-    } catch {
-      return { fri: false, sun: false }
+    const saved = loadSavedConfig()
+    return {
+      fri: saved?.leaveDays?.fri ?? false,
+      sun: saved?.leaveDays?.sun ?? false,
     }
   })
+  const [syncMessage, setSyncMessage] = useState('')
 
   const weeksRemaining = useMemo(() => getWeeksRemaining(targetDate), [targetDate])
   const weeklyHours = useMemo(
@@ -138,15 +126,23 @@ function App() {
   }
 
   useEffect(() => {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        totalHours,
-        targetDate,
-        leaveDays,
-      }),
-    )
+    const config = { totalHours, targetDate, leaveDays }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    writeConfigToUrl(config)
   }, [totalHours, targetDate, leaveDays])
+
+  const copySyncLink = async () => {
+    const config = { totalHours, targetDate, leaveDays }
+    writeConfigToUrl(config)
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      setSyncMessage('已複製同步連結！請在手機開啟同一個網址，或存成書籤。')
+    } catch {
+      setSyncMessage('無法自動複製，請手動複製網址列上的連結。')
+    }
+    window.setTimeout(() => setSyncMessage(''), 4000)
+  }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 p-3 md:gap-5 md:p-6">
@@ -177,6 +173,8 @@ function App() {
         onTargetDateChange={setTargetDate}
         leaveDays={leaveDays}
         onLeaveDayChange={updateLeaveDay}
+        onCopySyncLink={copySyncLink}
+        syncMessage={syncMessage}
       />
       <ScheduleTable schedule={schedule} />
 
