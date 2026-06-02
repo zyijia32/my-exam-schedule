@@ -2,9 +2,9 @@ const TIME_SLOTS = [
   { key: 'morning', label: '早晨黃金期', time: '09:00-12:00', hours: 3, type: 'study' },
   { key: 'lunchBreak', label: '午餐與午睡', time: '12:00-13:30', hours: 1.5, type: 'break' },
   { key: 'afternoon1', label: '午後衝刺(一)', time: '13:30-16:30', hours: 3, type: 'study' },
-  { key: 'afternoon2', label: '午後衝刺(二)', time: '16:30-19:30', hours: 3, type: 'study' },
-  { key: 'dinnerBreak', label: '晚餐與放鬆', time: '19:30-21:30', hours: 2, type: 'break' },
-  { key: 'nightStudy', label: '晚自習', time: '21:30-00:30', hours: 3, type: 'study' },
+  { key: 'afternoon2', label: '午後衝刺(二)', time: '16:30-18:00', hours: 1.5, type: 'study' },
+  { key: 'dinnerBreak', label: '晚餐與放鬆', time: '18:00-19:30', hours: 1.5, type: 'break' },
+  { key: 'nightStudy', label: '晚自習', time: '19:30-22:30', hours: 3, type: 'study' },
 ]
 
 const WEEK_DAYS = [
@@ -252,7 +252,7 @@ export function buildWeeklySchedule(inputHours, options = {}) {
         if (slot.key === 'lunchBreak') {
           grid[day.key][index] = createEntry('break', '午餐 + 休息（1.5小時）')
         } else if (slot.key === 'dinnerBreak') {
-          grid[day.key][index] = createEntry('break', '晚餐 + 休息（2小時）')
+          grid[day.key][index] = createEntry('break', '晚餐 + 休息（1.5小時）')
         } else if (slot.type === 'study') {
           grid[day.key][index] = createEntry('free', SUBJECTS.free.label)
         } else {
