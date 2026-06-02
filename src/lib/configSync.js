@@ -19,27 +19,31 @@ export function encodeScheduleConfig(config) {
   return toBase64Url(JSON.stringify(config))
 }
 
+export function normalizeScheduleConfig(raw) {
+  if (!raw || typeof raw !== 'object') {
+    return null
+  }
+  return {
+    totalHours: {
+      calculus: raw.totalHours?.calculus ?? '8',
+      cs: raw.totalHours?.cs ?? '6',
+      english: raw.totalHours?.english ?? '5',
+    },
+    targetDate: raw.targetDate ?? null,
+    leaveDays: {
+      fri: raw.leaveDays?.fri ?? false,
+      sun: raw.leaveDays?.sun ?? false,
+    },
+  }
+}
+
 export function decodeScheduleConfig(encoded) {
   if (!encoded) {
     return null
   }
   try {
     const parsed = JSON.parse(fromBase64Url(encoded))
-    if (!parsed || typeof parsed !== 'object') {
-      return null
-    }
-    return {
-      totalHours: {
-        calculus: parsed.totalHours?.calculus ?? '8',
-        cs: parsed.totalHours?.cs ?? '6',
-        english: parsed.totalHours?.english ?? '5',
-      },
-      targetDate: parsed.targetDate ?? null,
-      leaveDays: {
-        fri: parsed.leaveDays?.fri ?? false,
-        sun: parsed.leaveDays?.sun ?? false,
-      },
-    }
+    return normalizeScheduleConfig(parsed)
   } catch {
     return null
   }
@@ -57,6 +61,33 @@ export function buildSyncUrl(config) {
   const url = new URL(window.location.href)
   url.searchParams.set(CONFIG_PARAM, encodeScheduleConfig(config))
   return url.toString()
+}
+
+export function readConfigFromStorage() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  const fromUrl = readConfigFromUrl()
+  if (fromUrl) {
+    return fromUrl
+  }
+  const saved = window.localStorage.getItem('exam-schedule-config-v1')
+  if (!saved) {
+    return null
+  }
+  try {
+    return normalizeScheduleConfig(JSON.parse(saved))
+  } catch {
+    return null
+  }
+}
+
+export function persistScheduleConfig(config) {
+  if (typeof window === 'undefined') {
+    return
+  }
+  window.localStorage.setItem('exam-schedule-config-v1', JSON.stringify(config))
+  writeConfigToUrl(config)
 }
 
 export function writeConfigToUrl(config) {

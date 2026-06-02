@@ -1,4 +1,4 @@
-import { BookOpenText, Calculator, Languages, Link2 } from 'lucide-react'
+import { BookOpenText, Calculator, Languages, Link2, RefreshCw, Save } from 'lucide-react'
 
 const inputConfigs = [
   {
@@ -30,32 +30,52 @@ function StudyConfigPanel({
   onTargetDateChange,
   leaveDays,
   onLeaveDayChange,
+  onSaveConfig,
+  onRefreshConfig,
   onCopySyncLink,
-  syncMessage,
+  actionMessage,
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-800">讀完影片目標設定</h2>
-        <button
-          type="button"
-          onClick={onCopySyncLink}
-          className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100"
-        >
-          <Link2 className="h-4 w-4" />
-          複製同步連結
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onSaveConfig}
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-100"
+          >
+            <Save className="h-4 w-4" />
+            儲存設定
+          </button>
+          <button
+            type="button"
+            onClick={onRefreshConfig}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            <RefreshCw className="h-4 w-4" />
+            重新載入
+          </button>
+          <button
+            type="button"
+            onClick={onCopySyncLink}
+            className="inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100"
+          >
+            <Link2 className="h-4 w-4" />
+            複製同步連結
+          </button>
+        </div>
       </div>
-      {syncMessage ? (
+      {actionMessage ? (
         <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-          {syncMessage}
+          {actionMessage}
         </p>
       ) : null}
       <p className="mt-1 text-sm text-slate-500">
         先填「剩餘影片總時數」，再選目標日期，系統會自動換算每週需要讀的時數。
       </p>
       <p className="mt-1 text-xs text-slate-500">
-        手機與電腦請使用同一個同步連結（或書籤），設定才會一致；僅開一般網址會各自記憶。
+        改完請按「儲存設定」；手機與電腦要用同一個同步連結才會一致。
       </p>
       <p className="mt-1 text-xs text-slate-500">
         排課會優先以 3 小時時段安排；若該科剩餘不足 3 小時，會自動填入剩餘時數（例如 2h）。
